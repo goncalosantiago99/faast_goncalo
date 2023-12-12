@@ -19,8 +19,8 @@ REGION_INP = args.region
 
 def clean_data():
 
-    i_path = "/data/eu_life_expectancy_raw.tsv"
-    o_path = "/data"
+    i_path = "data/eu_life_expectancy_raw.tsv"
+    o_path = "data"
 
     loaded_tsv = load_tsv(i_path)
 
