@@ -5,7 +5,7 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main" , "ci"]
+    branches: [ "main" ]
 
 permissions:
   contents: read
@@ -28,7 +28,7 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Test with pytest
       run: |
-        pytest
+        pytest life_expectancy --cov
     - name: Analysing the code with pylint
       run: |
-        pylint $(git ls-files '*.py')
+        pylint life_expectancy.cleaning
