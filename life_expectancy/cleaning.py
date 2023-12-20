@@ -2,114 +2,178 @@ import argparse
 import pandas as pd
 import numpy as np
 
-# cria um objeto "ArgumentParser"
-parser = argparse.ArgumentParser(description="Clean and process life expectancy data")
+def clean_data( df: pd.DataFrame, region: str) -> pd.DataFrame:
+    """
+    This function does a full cleanse regarding the dataframe
+    originated by the TST file
+    Args:
+    df - tsv files as a pandas dataframe
+    region - the region we want to filter the dataframe by
 
-# adiciona o argumento que deseja passar à linha de comando usando
-parser.add_argument("--region",
-                    type=str,
-                    default="PT",
-                    help="Specify the region for the data to be filtered by")
+    Returns:
+    filtered_df - the cleaned dataframe
+    """
 
-# obtém o valor do argumento da linha de comando
-args, _ = parser.parse_known_args()
+    # create list that identifies the group of columns which will
+    # caracterize each row
+    attribute_cols = ["unit", "sex", "age", "region"]
 
-# obtem o valor do argumento "--region"
-REGION_INP = args.region
+    splited_df = split_column(df, r"unit,sex,age,geo\time", ",", attribute_cols)
 
-def clean_data():
+    ordered_df = order_columns(splited_df, attribute_cols)
 
-    i_path = "life_expectancy/data/eu_life_expectancy_raw.tsv"
-    o_path = "life_expectancy/data"
+    long_df = pivot_df(ordered_df, attribute_cols)
 
-    loaded_tsv = load_tsv(i_path)
+    df_without_space = work_spaces(long_df, "value")
 
-    splited_df = split_column(loaded_tsv, r"unit,sex,age,geo\time", ",")
+    df_with_numeric = delete_non_numeric(df_without_space, "value")
 
-    ordered_df = order_columns(splited_df)
-
-    long_df = unpivot_df(ordered_df)
-
-    df_no_space = work_space(long_df, "value")
-
-    data_type_set = set_datatypes(df_no_space)
+    data_type_set = set_datatypes(df_with_numeric)
 
     no_nan_df = data_type_set.dropna()
 
-    filtered_df = no_nan_df.loc[no_nan_df['region'] == REGION_INP]
+    # 'no_nan_df' is filtered by the region received as input
+    # on the 'clean_data' function
+    filtered_df = no_nan_df[no_nan_df['region'] == region]
 
-    # run main function
-    output_df_as_csv(filtered_df, o_path)
+    return filtered_df
 
-    return print("DF created")
+def load_data(path_inp: str) -> pd.DataFrame:
+    """
+    This function loads the TSV file stored in the received
+    path and loads it into a pandas dataframe
+    Args:
+    path_inp - path of the TSV file
 
+    Returns: the tsv file as a pandas dataframe
+    """
 
-def load_tsv(path):
-
-    # Read the TSV file into a pandas DataFrame
-    df = pd.read_csv(path, sep='\t')
+    df = pd.read_csv(path_inp, sep='\t')
 
     return df
 
-def split_column(df, name_column, delimeter):
+def split_column(df: pd.DataFrame, name_column: str, delimeter: str, atb_col: list) -> pd.DataFrame:
+    """
+    This function splits the values in the specific column based on a delimeter and 
+    expands them into new columns. It also drops the column that was splited.
+    Args:
+    df - the dataframe to be splited
+    name_column - the column to be splited
+    delimeter - the delimeter that will split the column
+    atb_col - the list of columns that will be created after the split
 
-    # Split the values in the specific column based on a delimeter and expand them into new columns
-    df[["unit", "sex", "age", "region"]] = df[name_column].str.split(delimeter, expand=True)
+    Returns: 
+    df - the dataframe now with the splited column
+    """
 
-    # Drop splited column
+    df[atb_col] = df[name_column].str.split(delimeter, expand=True)
+
     df = df.drop(columns=[name_column])
 
     return df
 
-def order_columns(df):
+def order_columns(df: pd.DataFrame, attribute_cols: list) -> pd.DataFrame:
+    """
+    This function orders the columns in the dataframe
+    Args:
+    df - the dataframe to be ordered
+    attribute_cols - the list of columns that will be created after the split
 
-    # create that identifies the columns that shoud be first
-    init_col = ["unit", "sex", "age", "region"]
+    Returns: 
+    df - the dataframe ordered
+    """
 
-    # Reorder columns
+    # create list that identifies the columns that shoud come first
+    init_col = attribute_cols
+
+    # reorder the datafrane columns based on the 'init_col' list
     new_column_order = init_col + [col for col in df.columns if col not in init_col]
     df = df[new_column_order]
 
     return df
 
-def unpivot_df(df):
+def pivot_df(df: pd.DataFrame, attribute_cols: list) -> pd.DataFrame:
+    """
+    This function pivots the dataframe regarding the columns
+    that represent a year
+    This function orders the columns in the dataframe
+    Args:
+    df - the dataframe to be pivoted
+    attribute_cols - the list of columns that will remain unpivoted
 
-    # create that identifies the columns that shoud be first
-    unpivot_col = ["unit", "sex", "age", "region"]
+    Returns: 
+    df - the dataframe pivoted
+    """
 
-    # unpivot the DataFrame to long format
+    # create list that identifies the columns that shoud remain unpivoted
+    unpivot_col = attribute_cols
+
+    # pivots the dataframe to long format
     long_df = pd.melt(df, id_vars = unpivot_col, var_name='year', value_name='value')
 
     return long_df
 
+def work_spaces(df: pd.DataFrame, monitor_column: str) -> pd.DataFrame:
+    """
+    This function deletes the spaces in the column that is given
+    as input
+    Args:
+    df - the dataframe to transformed
+    monitor_column - the column that will be transformed
 
-def work_space(df, monitor_column):
+    Returns: 
+    df - the dataframe without spaces in the desired column
+    """
 
-    # Remove leading and trailing spaces, and convert to numeric values
+    # remove leading and trailing spaces, and convert to numeric values
     df[monitor_column] = df[monitor_column].str.strip()
 
-    # Now removel all chars that aren't numbers and '.'
+    return df
+
+def delete_non_numeric(df: pd.DataFrame, monitor_column: str) -> pd.DataFrame:
+    """
+    This function deletes all the rows that aren't numerical regarding
+    the column that is given as input
+    Args:
+    df - the dataframe to transformed
+    monitor_column - the column that will be transformed
+
+    Returns: 
+    df - the dataframe without rows that aren't numerical regarding a
+    specific column
+    """
+
+    # remove all chars that aren't numbers and '.'
     df[monitor_column] = df[monitor_column].str.replace(r"[^\d\-+\.]", "", regex=True)
 
     return df
 
-def detect_non_numeric( df , monitor_column):
+def convert_to_float(value: str) -> float:
+    """
+    This function converts the input column to float and replaces 
+    non-convertible values with NaN
+    Args:
+    value - the column to be converted to float
 
-    # Filter non-numeric values and store them in a new variable
-    non_numeric_values = df.loc[~df[monitor_column].str.isnumeric(), monitor_column].unique()
-
-    return non_numeric_values
-
-# Convert the 'values' column to float and replace non-convertible values with NaN
-def convert_to_float(value):
+    Returns: 
+    df - the converted column
+    """
     try:
         return float(value)
     except ValueError:
         return np.nan
 
-def set_datatypes(df):
+def set_datatypes(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    This function converts the datatypes to the desired ones
+    Args:
+    df - the dataframe to be transformed
 
-    # Define a dictionary specifying the data types
+    Returns: 
+    df - the transformed dataframe
+    """
+
+    # define a dictionary specifying the data types
     data_types = {'unit': str,
                   'sex': str,
                   'age': str,
@@ -118,20 +182,64 @@ def set_datatypes(df):
                   'value': str
                   }
 
-    # Change data types based on the dictionary
+    # change data types based on the dictionary
     df = df.astype(data_types)
 
-    # Change the value column data type where in error cases it return NaN
+    # change the value column data type where in error cases it return NaN
     df['value'] = df['value'].apply(convert_to_float)
 
     return df
 
-def output_df_as_csv(df, output_df_path):
+def save_data(df: pd.DataFrame, output_df_path: str) -> None:
+    """
+    This function saves the filtered dataframe to the data folder
+    Args:
+    df - the dataframe to be converted to CSV
+    output_df_path - the path where the CSV file will be created
+    """
 
-    name_output_df = "/pt_life_expectancy.csv"
+    df.to_csv(output_df_path, index=False)
 
-    # Save the filtered dataframe to the data folder
-    df.to_csv(output_df_path + name_output_df, index=False)
+def main():
+    """
+    This function executes the whole script program
+    """
+
+    # create "ArgumentParser" object
+    parser = argparse.ArgumentParser(description="Clean and process life expectancy data")
+
+    # add new command line parameter
+    parser.add_argument("--region",
+                        type=str,
+                        default="PT",
+                        help="Specify the region for the data to be filtered by")
+
+    # add new command line parameter
+    parser.add_argument("--input_path",
+                        type=str,
+                        help="Specify the path for the tsv file that needs cleaning")
+
+    # add new command line parameter
+    parser.add_argument("--output_path",
+                        type=str,
+                        help="Specify the path where the cleaned csv file will be stored")
+
+    # get the parameters value from the command lind
+    args = parser.parse_args()
+
+    # store the parameters values
+    region_inp = args.region
+    path_inp = args.input_path
+    path_out = args.output_path
+
+    # load the data from the tsv
+    df = load_data(path_inp)
+
+    # clean the data
+    df_cleaned = clean_data(df, region_inp)
+
+    # store the cleaned df in a csv file in a specific path
+    save_data(df_cleaned, path_out)
 
 if __name__ == "__main__": # pragma: no cover
-    clean_data()
+    main()
