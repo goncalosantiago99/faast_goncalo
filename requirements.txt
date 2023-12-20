@@ -1,0 +1,7 @@
+pytest 
+pandas 
+pylint 
+pytest-cov 
+toml 
+argparse 
+numpy
