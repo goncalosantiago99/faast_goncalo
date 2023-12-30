@@ -29,7 +29,8 @@ def life_expectancy_input() -> pd.DataFrame:
     """Fixture to return the path to the expected input of the cleaning script"""
 
     # creates panda dataframe after a TSV file
-    df = pd.read_csv("./life_expectancy/data/eu_life_expectancy_raw.tsv", sep='\t')
+    df = pd.read_csv("./life_expectancy/data/eu_life_expectancy_raw.tsv",
+        sep='\t')
 
     # sample the df
     sample_df = sample_with_pt(df.copy(), 500)
@@ -46,7 +47,8 @@ def pt_life_expectancy_expected() -> pd.DataFrame:
     """Fixture to load the expected output of the cleaning script"""
 
     # creates panda dataframe after a TSV file
-    df = pd.read_csv(FIXTURES_DIR / "eu_life_expectancy_raw.tsv", sep='\t')
+    df = pd.read_csv(FIXTURES_DIR / "eu_life_expectancy_raw.tsv",
+        sep='\t')
 
     # clean the sampled df
     df_cleaned = clean_data(df, "PT")
@@ -54,5 +56,7 @@ def pt_life_expectancy_expected() -> pd.DataFrame:
     # store the cleaned df in a tsv file in a specific path
     df_cleaned.to_csv("./life_expectancy/tests/fixtures/pt_life_expectancy_expected.csv",
         index=False)
+
+    df_cleaned = df_cleaned.reset_index(drop=True)
 
     return df_cleaned

@@ -15,12 +15,9 @@ def test_load(life_expectancy_input):
 
     # load the dataframe that was just cleaned and created
     eu_life_expectancy_actual = pd.read_csv(
-        FIXTURES_DIR / "eu_life_expectancy_raw.tsv"
+        FIXTURES_DIR / "eu_life_expectancy_raw.tsv",
+        sep='\t'
     )
-
-    df = df.reset_index(drop=True)
-    eu_life_expectancy_actual = eu_life_expectancy_actual.reset_index(drop=True)
-
 
     pd.testing.assert_frame_equal(
         df, eu_life_expectancy_actual
@@ -38,7 +35,6 @@ def test_clean_data(life_expectancy_input, pt_life_expectancy_expected):
     df_cleaned = clean_data(df, region)
 
     df_cleaned = df_cleaned.reset_index(drop=True)
-    pt_life_expectancy_expected = pt_life_expectancy_expected.reset_index(drop=True)
 
     pd.testing.assert_frame_equal(
         df_cleaned, pt_life_expectancy_expected
@@ -65,9 +61,6 @@ def test_save(life_expectancy_input, pt_life_expectancy_expected):
     pt_life_expectancy_actual = pd.read_csv(
         OUTPUT_DIR / "pt_life_expectancy.csv"
     )
-
-    pt_life_expectancy_actual = pt_life_expectancy_actual.reset_index(drop=True)
-    pt_life_expectancy_expected = pt_life_expectancy_expected.reset_index(drop=True)
 
     pd.testing.assert_frame_equal(
         pt_life_expectancy_actual, pt_life_expectancy_expected
