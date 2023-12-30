@@ -1,34 +1,58 @@
 """Pytest configuration file"""
 import pandas as pd
 import pytest
+from life_expectancy.cleaning import clean_data
+from . import FIXTURES_DIR#, OUTPUT_DIR
 
-from . import FIXTURES_DIR, OUTPUT_DIR
-
-
-@pytest.fixture(autouse=True)
-def run_before_and_after_tests() -> None:
-    """Fixture to execute commands before and after a test is run.
-
-    1. Everything you may write before 'yield' will run before the tests
-    2. The command 'yield' marks where tests will happen
-    3. The code after 'yield' will be run after the tests are finished.
-
-    Before you start using your own fixtures, all tests will produce a csv file
-    on the output directory. Since this is bad practise, we are erasing this
-    file to avoid polluting your workspace.
-
-    After refactoring your functions this code will do nothing.
+def sample_with_pt(df: pd.DataFrame, sample_size: int) -> pd.DataFrame:
     """
-    # Setup: fill with any logic you want
+    This function will get a df and extract a sample from it, with a size equal to
+    "sample_size". However, it assures there is at least one row with from the "PT" region.
+    Parameters:
+    df - Loaded data from the TSV
+    sample_size - Size of the sample 
+    
+    Return:
+    sample - Dataframe that represents the sample of the input dataframe
+    """
+    # create a sample from the input dataframe
+    sample = df.sample(sample_size)
 
-    yield # this is where the testing happens
+    # while there is not "PT" row we will keep sampling
+    while len(sample[sample[r'unit,sex,age,geo\time'].str.endswith('PT')]) == 0:
+        sample = df.sample(sample_size)
 
-    # Teardown : fill with any logic you want
-    file_path = OUTPUT_DIR / "pt_life_expectancy.csv"
-    file_path.unlink(missing_ok=True)
+    return sample
 
+@pytest.fixture(scope="session")
+def life_expectancy_input() -> pd.DataFrame:
+    """Fixture to return the path to the expected input of the cleaning script"""
+
+    # creates panda dataframe after a TSV file
+    df = pd.read_csv("./life_expectancy/data/eu_life_expectancy_raw.tsv", sep='\t')
+
+    # sample the df
+    sample_df = sample_with_pt(df.copy(), 500)
+
+    # store the sampled df in a tsv file in a specific path
+    sample_df.to_csv("./life_expectancy/tests/fixtures/eu_life_expectancy_raw.tsv",
+        sep='\t',
+        index=False)
+
+    return FIXTURES_DIR / "eu_life_expectancy_raw.tsv"
 
 @pytest.fixture(scope="session")
 def pt_life_expectancy_expected() -> pd.DataFrame:
     """Fixture to load the expected output of the cleaning script"""
-    return pd.read_csv(FIXTURES_DIR / "pt_life_expectancy_expected.csv")
+
+    # creates panda dataframe after a TSV file
+    df = pd.read_csv(FIXTURES_DIR / "eu_life_expectancy_raw.tsv", sep='\t')
+
+    # clean the sampled df
+    df_cleaned = clean_data(df, "PT")
+
+    # store the cleaned df in a tsv file in a specific path
+    df_cleaned.to_csv("./life_expectancy/tests/fixtures/pt_life_expectancy_expected.csv",
+        index=False)
+
+    return df_cleaned
