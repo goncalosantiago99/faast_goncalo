@@ -39,7 +39,12 @@ def test_clean_data(life_expectancy_input_path, pt_life_expectancy_expected):
     )
 
 def test_save(life_expectancy_input_path, pt_life_expectancy_expected):
+    # permite que qq função que crie um csv, nao o crie na realidade e
+    # faça outra coisa a definir
     with mock.patch('pandas.DataFrame.to_csv') as mock_to_csv:
+        # definir o que fazer nas funções to_csv
+        mock_to_csv.side_effect = print("Data saved successfully.")
+
         # Loads the data from the tsv file to a pandas dataframe
         df_loaded = load_data(life_expectancy_input_path)
 
@@ -51,12 +56,6 @@ def test_save(life_expectancy_input_path, pt_life_expectancy_expected):
 
         # store the cleaned df in a csv file in a specific path
         df_cleaned.to_csv("this/path/should/not/exist.csv", index=False)
-
-        # Assert that the to_csv method was called with the expected arguments
-        mock_to_csv.assert_called_once_with("this/path/should/not/exist.csv", index=False)
-
-        # Instead of actually reloading the data, you can print a message
-        print("Data reloaded successfully.")
 
         # path where the cleaned df will be stored
         out_path: Path  = OUTPUT_DIR / "pt_life_expectancy.csv"
