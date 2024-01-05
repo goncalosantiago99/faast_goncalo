@@ -36,6 +36,9 @@ def clean_data( df: pd.DataFrame, region: str) -> pd.DataFrame:
     # on the 'clean_data' function
     filtered_df = no_nan_df[no_nan_df['region'] == region]
 
+    # reset indexes
+    filtered_df = filtered_df.reset_index(drop=True)
+
     return filtered_df
 
 def load_data(path_inp: str) -> pd.DataFrame:
