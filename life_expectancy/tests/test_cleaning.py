@@ -55,7 +55,7 @@ def test_save(life_expectancy_input_path, pt_life_expectancy_expected):
         df_cleaned = clean_data(df_loaded, region)
 
         # store the cleaned df in a csv file in a specific path
-        df_cleaned.to_csv("this/path/should/not/exist.csv", index=False)
+        df_cleaned.to_csv(OUTPUT_DIR / "pt_life_expectancy.csv", index=False)
 
         # path where the cleaned df will be stored
         out_path: Path  = OUTPUT_DIR / "pt_life_expectancy.csv"
