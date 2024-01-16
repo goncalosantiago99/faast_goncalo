@@ -1,6 +1,7 @@
 import argparse
 import pandas as pd
 import numpy as np
+from life_expectancy.enum_class import Region
 
 def clean_data( df: pd.DataFrame, region: str) -> pd.DataFrame:
     """
@@ -211,10 +212,11 @@ def main():
     # create "ArgumentParser" object
     parser = argparse.ArgumentParser(description="Clean and process life expectancy data")
 
-    # add new command line parameter
+    # add new command line parameter with choices from the Region Enum
     parser.add_argument("--region",
-                        type=str,
-                        default="PT",
+                        type=Region,
+                        choices=list(Region),
+                        default=Region.PT,
                         help="Specify the region for the data to be filtered by")
 
     # add new command line parameter
@@ -231,7 +233,7 @@ def main():
     args = parser.parse_args()
 
     # store the parameters values
-    region_inp = args.region
+    region_inp = args.region.value
     path_inp = args.input_path
     path_out = args.output_path
 
