@@ -1,25 +1,4 @@
 from enum import Enum
-import pandas as pd
-
-def load_data(path_inp: str) -> pd.DataFrame:
-    """
-    This function loads the csv file stored in the received
-    path and loads it into a pandas dataframe
-    Args:
-    path_inp - path of the csv file
-
-    Returns: the csv file as a pandas dataframe
-    """
-
-    df_loaded = pd.read_csv(path_inp, sep=',')
-
-    return df_loaded
-
-# load the data from the csv
-df = load_data("./life_expectancy/data/possible_regions.csv")
-
-# extract unique values from the 'Region' column
-unique_regions = df['region'].unique()
 
 # Define the Region Enum class
 class Region(Enum):
@@ -74,7 +53,3 @@ class Region(Enum):
     MD = 'MD'
     SM = 'SM'
     RU = 'RU'
-
-# Print all values in the enum
-for member in list(Region):
-    print(member.value)
