@@ -1,0 +1,9 @@
+
+Testar para ficheiro tsv:
+
+python cleaning.py --format_input_file tsv --region PT --input_path /home/gosapereira/goncalo_assignments/life_expectancy/data/eu_life_expectancy_raw.tsv --output_path /home/gosapereira/goncalo_assignments/life_expectancy/test_module_5/cleaned_TSV.csv
+
+Testar para ficheiro json:
+
+python cleaning.py --format_input_file json --region PT --input_path /home/gosapereira/goncalo_assignments/life_expectancy/data/eurostat_life_expect.json --output_path /home/gosapereira/goncalo_assignments/life_expectancy/test_module_5/cleaned_JSON.csv
+
